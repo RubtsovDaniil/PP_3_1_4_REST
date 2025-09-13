@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<meta charset="UTF-8">
+<head>
+    <title>Admin Panel</title>
+</head>
+<body>
+<div sec:authorize="isAuthenticated()">
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+
+<h2>Users list</h2>
+<br>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>LastName</th>
+        <th>Age</th>
+        <th>Login</th>
+        <th>Password</th>
+        <th>Role</th>
+        <th>Operations</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.lastName}"></td>
+        <td th:text="${user.age}"></td>
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.password}"></td>
+        <td th:text="${user.roles}"></td>
+        <td>
+                    <span th:each="role, iterStat : ${user.roles}">
+                        <span th:text="${role.name}"></span>
+                        <span th:if="${!iterStat.last}">, </span>
+                    </span>
+        </td>
+        <td>
+            <a th:href="@{/admin/updateUser(userId=${user.id})}">Update user</a>
+            <a th:href="@{/admin/deleteUser(userId=${user.id})}">Delete user</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<br/>
+<div th:if="${#lists.isEmpty(users)}">
+    <p>Users not found</p>
+</div>
+<br>
+<a th:href="@{/admin/addUser}">Add User</a>
+<br/>
+<p><a th:href="@{/user}">Go to user information panel</a></p>
+</body>
+</html>

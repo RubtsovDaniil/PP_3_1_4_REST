@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+
+<meta charset="UTF-8">
+<head>
+    <title>User information</title>
+
+</head>
+<body>
+<h2>User information</h2>
+<br>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>LastName</th>
+        <th>Age</th>
+        <th>Login</th>
+        <th>Password</th>
+        <th>Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${user != null}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.lastName}"></td>
+        <td th:text="${user.age}"></td>
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.password}"></td>
+        <td th:text="${user.roles}"></td>
+    </tr>
+    </tbody>
+</table>
+<!-- Сообщение если user null -->
+<div th:if="${user == null}" class="alert alert-warning">
+    User not found <a th:href="@{/login}">Login</a>
+</div>
+<br>
+<div sec:authorize="isAuthenticated()">
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+<p><a th:href="@{admin}">Go to admin panel</a></p>
+</body>
+</html>
