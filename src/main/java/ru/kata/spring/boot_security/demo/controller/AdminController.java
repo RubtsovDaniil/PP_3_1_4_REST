@@ -11,6 +11,7 @@ import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +32,8 @@ public class AdminController {
     @GetMapping
     public String userList(Model model) {
         model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("user", new User());
+        model.addAttribute("roles", roleService.getAllRoles());
         return "admin/adminPanel";
     }
 
