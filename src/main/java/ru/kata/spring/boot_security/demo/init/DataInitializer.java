@@ -37,7 +37,7 @@ public class DataInitializer implements CommandLineRunner {
             roleService.saveRole(userRole);
         }
 
-        User adminUser = userService.getUserByUsername("admin");
+        User adminUser = userService.getUserByUsername("tadmin");
         if (adminUser == null) {
             adminUser = new User();
             adminUser.setUsername("admin");

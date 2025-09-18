@@ -45,7 +45,10 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public void deleteUser(long id) {
-        em.remove(em.find(User.class, id));
+        User user = em.find(User.class, id);
+        if (user != null) {
+            em.remove(user);
+        }
     }
 
     @Override

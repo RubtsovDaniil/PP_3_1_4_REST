@@ -5,15 +5,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.validation.Valid;
-import java.security.Principal;
-import java.util.HashSet;
-import java.util.Set;
 
 @Controller
 @RequestMapping("/admin")
@@ -53,13 +49,7 @@ public class AdminController {
             model.addAttribute("roles", roleService.getAllRoles());
             return "admin/addUser";
         }
-        if (selectedRoles != null) {
-            Set<Role> roleSet = new HashSet<>();
-            for (String roleName : selectedRoles) {
-                roleSet.add(roleService.getRoleByName(roleName));
-            }
-            user.setRoles(roleSet);
-        }
+        userService.setUserRoles(user, selectedRoles);
         userService.saveUser(user);
         return "redirect:/admin";
     }
@@ -73,13 +63,7 @@ public class AdminController {
             model.addAttribute("roles", roleService.getAllRoles());
             return "admin/addUser";
         }
-        if (selectedRoles != null) {
-            Set<Role> roleSet = new HashSet<>();
-            for (String roleName : selectedRoles) {
-                roleSet.add(roleService.getRoleByName(roleName));
-            }
-            user.setRoles(roleSet);
-        }
+        userService.setUserRoles(user, selectedRoles);
         userService.updateUser(user);
         return "redirect:/admin";
     }
