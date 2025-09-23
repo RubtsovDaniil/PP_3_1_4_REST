@@ -40,11 +40,11 @@ public class User implements UserDetails {
     private Byte age;
 
     @Column(unique = true, nullable = false)
-    @Size(min = 2, message = "Не меньше 2 знаков")
+    @Size(min =5, message = "Email не меньше 5 символов")
     private String username;
 
     @Column(nullable = false)
-    @Size(min = 5, message = "Не меньше 5 знаков")
+    @Size(min = 5, message = "Пароль не меньше 5 символов")
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -137,10 +137,6 @@ public class User implements UserDetails {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
-    }
-
-    public void addRole(Role role) {
-        getRoles().add(role);
     }
 
     @Override

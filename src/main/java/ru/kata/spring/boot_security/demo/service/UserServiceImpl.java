@@ -43,11 +43,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByUsername(String username) {
-        return userDao.getUserByUsername(username);
-    }
-
-    @Override
     @Transactional
     public void saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -64,7 +59,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUser(User user) {
-        getUserById(user.getId());
         User existingUser = getUserById(user.getId());
         existingUser.setName(user.getName());
         existingUser.setLastName(user.getLastName());
@@ -86,5 +80,22 @@ public class UserServiceImpl implements UserService {
             }
             user.setRoles(roleSet);
         }
+    }
+
+    @Transactional
+    @Override
+    public void updateUserWithRoles(long id, String name, String lastName, byte age,
+                                    String username, String password, String[] selectedRoles) {
+        User user = getUserById(id);
+        user.setName(name);
+        user.setLastName(lastName);
+        user.setAge(age);
+        user.setUsername(username);
+
+        if (password != null && !password.trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        setUserRoles(user, selectedRoles);
+        updateUser(user);
     }
 }

@@ -5,22 +5,26 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
     private final UserService userService;
     private final RoleService roleService;
+    private final UserRepository userRepository;
 
     @Autowired
     public DataInitializer(UserService userService,
-                           RoleService roleService) {
+                           RoleService roleService, UserRepository userRepository) {
         this.userService = userService;
         this.roleService = roleService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -37,23 +41,24 @@ public class DataInitializer implements CommandLineRunner {
             roleService.saveRole(userRole);
         }
 
-        User adminUser = userService.getUserByUsername("tadmin");
-        if (adminUser == null) {
-            adminUser = new User();
-            adminUser.setUsername("admin");
+        Optional<User> adminUserOpt = userRepository.findByUsername("admin@mail.ru");
+        if (adminUserOpt.isEmpty()) {
+            User adminUser = new User();
+            adminUser.setUsername("admin@mail.ru");
             adminUser.setPassword("admin");
             adminUser.setName("Alex");
             adminUser.setLastName("Smith");
             adminUser.setAge((byte) 12);
             Set<Role> adminRoles = new HashSet<>();
             adminRoles.add(adminRole);
+            adminRoles.add(userRole);
             adminUser.setRoles(adminRoles);
             userService.saveUser(adminUser);
         }
-        User regularUser = userService.getUserByUsername("user");
-        if (regularUser == null) {
-            regularUser = new User();
-            regularUser.setUsername("user");
+        Optional<User> regularUserOpt = userRepository.findByUsername("user@mail.ru");
+        if (regularUserOpt.isEmpty()) {
+            User regularUser = new User();
+            regularUser.setUsername("user@mail.ru");
             regularUser.setPassword("admin");
             regularUser.setName("Adam");
             regularUser.setLastName("Black");

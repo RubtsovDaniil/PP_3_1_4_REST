@@ -11,11 +11,8 @@ public interface UserDao {
 
     Optional<User> getUserById(long id);
 
-    User getUserByUsername(String username);
-
     void saveUser(User user);
 
     void deleteUser(long id);
 
-    void updateUser(User user);
 }

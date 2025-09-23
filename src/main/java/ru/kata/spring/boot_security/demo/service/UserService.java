@@ -12,8 +12,6 @@ public interface UserService {
 
     User getUserById(long id);
 
-    User getUserByUsername(String username);
-
     void saveUser(User user);
 
     void deleteUser(long id);
@@ -21,4 +19,7 @@ public interface UserService {
     void updateUser(User user);
 
     void setUserRoles(User user, String[] selectedRoles);
+
+    void updateUserWithRoles(long id, String name, String lastName, byte age,
+                             String username, String password, String[] selectedRoles);
 }

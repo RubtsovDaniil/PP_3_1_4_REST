@@ -37,48 +37,39 @@ public class AdminController {
     public String addUser(Model model) {
         model.addAttribute("user", new User());
         model.addAttribute("roles", roleService.getAllRoles());
-        return "admin/addUser";
+        return "admin/adminPanel";
     }
 
     @PostMapping("/saveUser")
     public String saveUser(@Valid @ModelAttribute("user") User user,
                            BindingResult bindingResult,
-                           @RequestParam(value = "selectedRoles", required = false) String[] selectedRoles,
+                           @RequestParam(value = "newRoles", required = false) String[] newRoles,
                            Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", roleService.getAllRoles());
-            return "admin/addUser";
+            return "admin/adminPanel";
         }
-        userService.setUserRoles(user, selectedRoles);
+        userService.setUserRoles(user, newRoles);
         userService.saveUser(user);
         return "redirect:/admin";
     }
 
     @PostMapping("/updateUser")
-    public String updateUser(@Valid @ModelAttribute("user") User user,
-                           BindingResult bindingResult,
-                           @RequestParam(value = "selectedRoles", required = false) String[] selectedRoles,
-                           Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("roles", roleService.getAllRoles());
-            return "admin/addUser";
-        }
-        userService.setUserRoles(user, selectedRoles);
-        userService.updateUser(user);
+    public String updateUser(@RequestParam("userId") long id,
+                             @RequestParam("name") String name,
+                             @RequestParam("lastName") String lastName,
+                             @RequestParam("age") byte age,
+                             @RequestParam("username") String username,
+                             @RequestParam(value = "password", required = false) String password,
+                             @RequestParam(value = "selectedRoles", required = false) String[] selectedRoles) {
+        userService.updateUserWithRoles(id, name, lastName, age, username, password, selectedRoles);
         return "redirect:/admin";
     }
 
-    @GetMapping("/updateUser")
-    public String updateUserForm(@RequestParam("userId") long id, Model model) {
-        User user = userService.getUserById(id);
-        model.addAttribute("user", user);
-        model.addAttribute("roles", roleService.getAllRoles());
-        return "admin/addUser";
-    }
-
-    @GetMapping("/deleteUser")
+    @PostMapping("/deleteUser")
     public String deleteUser(@RequestParam("userId") long id) {
         userService.deleteUser(id);
         return "redirect:/admin";
     }
+
 }
