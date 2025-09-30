@@ -3,13 +3,10 @@ package ru.kata.spring.boot_security.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
-
-import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -33,36 +30,18 @@ public class AdminController {
         return "admin/adminPanel";
     }
 
-    @GetMapping("/addUser")
-    public String addUser(Model model) {
-        model.addAttribute("user", new User());
-        model.addAttribute("roles", roleService.getAllRoles());
-        return "admin/adminPanel";
-    }
-
     @PostMapping("/saveUser")
-    public String saveUser(@Valid @ModelAttribute("user") User user,
-                           BindingResult bindingResult,
-                           @RequestParam(value = "newRoles", required = false) String[] newRoles,
-                           Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("roles", roleService.getAllRoles());
-            return "admin/adminPanel";
-        }
-        userService.setUserRoles(user, newRoles);
-        userService.saveUser(user);
+    public String saveUser(@ModelAttribute("user") User user,
+                           @RequestParam(value = "newRoles", required = false) String[] newRoles) {
+        userService.saveUser(user, newRoles);
         return "redirect:/admin";
     }
 
     @PostMapping("/updateUser")
     public String updateUser(@RequestParam("userId") long id,
-                             @RequestParam("name") String name,
-                             @RequestParam("lastName") String lastName,
-                             @RequestParam("age") byte age,
-                             @RequestParam("username") String username,
-                             @RequestParam(value = "password", required = false) String password,
+                             @ModelAttribute("existingUser") User user,
                              @RequestParam(value = "selectedRoles", required = false) String[] selectedRoles) {
-        userService.updateUserWithRoles(id, name, lastName, age, username, password, selectedRoles);
+        userService.updateUser(id, user, selectedRoles);
         return "redirect:/admin";
     }
 
