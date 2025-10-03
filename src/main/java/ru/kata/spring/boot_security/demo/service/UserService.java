@@ -12,11 +12,9 @@ public interface UserService {
 
     User getUserById(long id);
 
-    void saveUser(User user, String[] newRoles);
+    User saveUser(User user, String[] newRoles);
 
     void deleteUser(long id);
-
-    void setUserRoles(User user, String[] selectedRoles);
 
     void updateUser(long id, User user, String[] selectedRoles);
 

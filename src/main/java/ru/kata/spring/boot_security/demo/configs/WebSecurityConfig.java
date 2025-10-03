@@ -6,7 +6,9 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import ru.kata.spring.boot_security.demo.service.UserDetailServiceImpl;
 
 @Configuration
@@ -27,8 +29,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+//        // Отключаем защиту на тесты
+//        http
+//                .authorizeRequests()
+//                .anyRequest().permitAll() // Разрешаем ВСЕ запросы без аутентификации
+//                .and()
+//                .csrf(AbstractHttpConfigurer::disable);
+//        http.formLogin().disable();
+//        http.httpBasic().disable();
+
         http
                 .authorizeRequests()
+                .antMatchers("/", "/login", "/api/**", "/css/**", "/js/**").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/user").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
@@ -38,7 +50,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
                 .logout()
-                .permitAll();
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login")
+                .permitAll()
+                .and()
+                .csrf().disable();
     }
 
 //    // аутентификация inMemory
