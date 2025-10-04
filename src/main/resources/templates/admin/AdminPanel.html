@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Admin panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Верхняя навигационная панель -->
+<nav class="navbar navbar-expand-xl navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">
+            <span th:text="${#authentication.name}">admin@mail.ru</span>
+            with roles:
+            <span th:each="authority, iterStat : ${#authentication.authorities}">
+            <span th:text="${authority.authority.substring(5)}"></span>
+            <span th:if="${!iterStat.last}">, </span>
+            </span>
+        </span>
+        <div sec:authorize="isAuthenticated()">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-dark">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Левая навигационная панель -->
+        <div class="col-2 bg-white pt-3">
+            <div class="list-group">
+                <a href="/admin" class="list-group-item list-group-item-action active">Admin</a>
+                <a href="/user" class="list-group-item list-group-item-action">User</a>
+            </div>
+        </div>
+
+        <!-- Основное содержимое -->
+        <div class="col-10 bg-light pt-3">
+            <h2>Admin panel</h2>
+
+            <!-- Область для отображения уведомлений -->
+            <div id="alert-container"></div>
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="users-tab" data-toggle="tab" href="#users" role="tab">Users table</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="new-user-tab" data-toggle="tab" href="#new-user" role="tab">Add user</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Таблица пользователей -->
+                <div class="tab-pane fade show active" id="users" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            All users
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped" id="users-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Age</th>
+                                    <th>Login</th>
+                                    <th>Role</th>
+                                    <th>Edit</th>
+                                    <th>Delete</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <!-- Строки таблицы будут добавлены динамически через JavaScript -->
+                                </tbody>
+                            </table>
+                            <div id="no-users" style="display: none;">
+                                <p class="text-center">Нет пользователей для отображения</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Добавление нового пользователя -->
+                <div class="tab-pane fade " id="new-user" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            Add new user
+                        </div>
+                        <div class="card-body">
+                            <form id="addUserForm">
+                                <div class="form-group text-center">
+                                    <label for="firstName">First name</label>
+                                    <input type="text" class="form-control w-50 mx-auto"
+                                           id="firstName"
+                                           name="name"
+                                           required
+                                    />
+                                </div>
+                                <div class="form-group text-center">
+                                    <label for="lastName">Last name</label>
+                                    <input type="text" class="form-control w-50 mx-auto"
+                                           id="lastName"
+                                           name="lastName"
+                                           required
+                                    />
+                                </div>
+                                <div class="form-group text-center">
+                                    <label for="age">Age</label>
+                                    <input type="number" class="form-control w-50 mx-auto"
+                                           id="age"
+                                           name="age"
+                                           required
+                                    />
+                                </div>
+                                <div class="form-group text-center">
+                                    <label for="username">Email</label>
+                                    <input type="email" class="form-control w-50 mx-auto"
+                                           id="username"
+                                           name="username"
+                                           required
+                                    />
+                                </div>
+                                <div class="form-group text-center">
+                                    <label for="password">Password</label>
+                                    <input type="password" class="form-control w-50 mx-auto"
+                                           id="password"
+                                           name="password"
+                                           required
+                                    />
+                                </div>
+                                <div class="mb-3 text-center">
+                                    <label>Role</label>
+                                    <div id="new-user-roles">
+                                        <!-- Роли будут добавлены динамически -->
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <button type="button" id="addNewUser" class="btn btn-success">Add new user</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования пользователя -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit user</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <div class="form-group text-center">
+                        <label for="editId">ID</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="editId"
+                               name="id"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="editFirstName">First name</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="editFirstName"
+                               name="name"
+                               required
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="editLastName">Last name</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="editLastName"
+                               name="lastName"
+                               required
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="editAge">Age</label>
+                        <input type="number" class="form-control w-50 mx-auto"
+                               id="editAge"
+                               name="age"
+                               required
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="editEmail">Email</label>
+                        <input type="email" class="form-control w-50 mx-auto"
+                               id="editEmail"
+                               name="username"
+                               required
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="editPassword">Password</label>
+                        <input type="password" class="form-control w-50 mx-auto"
+                               id="editPassword"
+                               name="password"
+                        />
+                    </div>
+                    <div class="mb-3 text-center">
+                        <label>Role</label>
+                        <div id="edit-user-roles">
+                            <!-- Роли будут добавлены динамически -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveEditBtn">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для удаления пользователя -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete user</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteUserForm">
+                    <div class="form-group text-center">
+                        <label for="deleteId">ID</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="deleteId"
+                               name="userId"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="deleteFirstName">First name</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="deleteFirstName"
+                               name="name"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="deleteLastName">Last name</label>
+                        <input type="text" class="form-control w-50 mx-auto"
+                               id="deleteLastName"
+                               name="sureName"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="deleteAge">Age</label>
+                        <input type="number" class="form-control w-50 mx-auto"
+                               id="deleteAge"
+                               name="age"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label for="deleteEmail">Login</label>
+                        <input type="email" class="form-control w-50 mx-auto"
+                               id="deleteEmail"
+                               name="username"
+                               disabled
+                        />
+                    </div>
+                    <div class="form-group text-center">
+                        <label>Role</label>
+                        <div id="deleteRolesList">
+                            <!-- Роли будут добавлены динамически -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

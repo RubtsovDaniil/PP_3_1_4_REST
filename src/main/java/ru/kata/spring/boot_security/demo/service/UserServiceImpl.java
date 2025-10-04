@@ -2,6 +2,8 @@ package ru.kata.spring.boot_security.demo.service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +47,24 @@ public class UserServiceImpl implements UserService {
         return userDao.getUserById(id)
                 .orElseThrow(() ->
                         new NoSuchUserException("User with id " + id + " not found"));
+    }
+
+    @Override
+    public Optional<User> getCurrentUser() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return Optional.empty();
+            }
+
+            String username = auth.getName();
+            return userRepository.findByUsername(username);
+
+        } catch (Exception e) {
+            // Логируем ошибку, но возвращаем empty чтобы не прерывать работу приложения
+            System.err.println("Error getting current user: " + e.getMessage());
+            return Optional.empty();
+        }
     }
 
     @Override

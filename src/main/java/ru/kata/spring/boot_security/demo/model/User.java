@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -40,20 +41,20 @@ public class User implements UserDetails {
     @Max(value = 120, message = "Возраст не может превышать 120 лет")
     private Byte age;
 
-    @Column(unique = true)
+    @Column(name = "username", unique = true)
     @Email
     @NotBlank(message = "Поле не может быть пустым")
     private String username;
 
     @Column(name = "password")
     @NotBlank(message = "Поле не может быть пустым")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-//    @JsonManagedReference
     private Set<Role> roles = new HashSet<>();
 
     public User() {
@@ -91,21 +92,25 @@ public class User implements UserDetails {
         this.age = age;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled() {
         return true;
@@ -115,11 +120,13 @@ public class User implements UserDetails {
         this.username = username;
     }
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getRoles();
     }
 
+    @JsonIgnore
     @Override
     public String getPassword() {
         return password;

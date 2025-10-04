@@ -3,34 +3,26 @@ package ru.kata.spring.boot_security.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import ru.kata.spring.boot_security.demo.exeptionhandler.UserAlreadyExistsException;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
-import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
-public class AdminControllerREST {
+public class AdminRESTController {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final UserRepository userRepository;
 
     @Autowired
-    public AdminControllerREST(UserService userService, RoleService roleService, UserRepository userRepository) {
+    public AdminRESTController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
-        this.userRepository = userRepository;
     }
 
     @GetMapping("/users")
@@ -39,31 +31,16 @@ public class AdminControllerREST {
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUser(@PathVariable int id) {
+    public ResponseEntity<User> getUser(@PathVariable long id) {
         User user = userService.getUserById(id);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @GetMapping("/users/current")
-    public ResponseEntity<Optional<User>> getCurrentUser() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
-
-            String username = auth.getName();
-            Optional<User> user = userRepository.findByUsername(username);
-
-            if (user.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<User> getCurrentUser() {
+        Optional<User> userOptional = userService.getCurrentUser();
+        return userOptional.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @GetMapping("/roles")
@@ -85,9 +62,11 @@ public class AdminControllerREST {
 
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User user,
-                                           @RequestParam(value = "roles", required = false) String[] roleNames) {
+                                           @RequestParam(value = "roles", required = false) List<String> roleNames) {
         try {
-            return new ResponseEntity<>(userService.saveUser(user, roleNames), HttpStatus.OK);
+            userService.updateUser(user.getId(), user, roleNames != null ? roleNames.toArray(new String[0]) : null);
+            User updatedUser = userService.getUserById(user.getId());
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -95,7 +74,7 @@ public class AdminControllerREST {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable long id) {
         try {
             userService.deleteUser(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
