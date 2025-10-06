@@ -14,11 +14,10 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -69,13 +68,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User saveUser(User user, String[] newRoles) {
+    public User saveUser(User user, List<Long> newRoleIds) {
         Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
         if (existingUser.isPresent()) {
             throw new UserAlreadyExistsException("User with email " + user.getUsername() + " already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        setUserRoles(user, newRoles);
+        setUserRoles(user, newRoleIds);
         return userDao.saveUser(user);
     }
 
@@ -86,19 +85,18 @@ public class UserServiceImpl implements UserService {
         userDao.deleteUser(id);
     }
 
-    private void setUserRoles(User user, String[] selectedRoles) {
-        if (selectedRoles != null) {
-            Set<Role> roleSet = new HashSet<>();
-            for (String roleName : selectedRoles) {
-                roleSet.add(roleService.getRoleByName(roleName));
-            }
-            user.setRoles(roleSet);
+    private void setUserRoles(User user, List<Long> roleIds) {
+        if (roleIds != null && !roleIds.isEmpty()) {
+            Set<Role> roles = roleIds.stream()
+                    .map(roleService::getRoleById)
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
         }
     }
 
     @Transactional
     @Override
-    public void updateUser(long id, User user, String[] selectedRoles) {
+    public void updateUser(long id, User user, List<Long> selectedRoleIds) {
         user.setId(id);
         User existingUser = getUserById(user.getId());
         existingUser.setName(user.getName());
@@ -118,7 +116,7 @@ public class UserServiceImpl implements UserService {
         if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        setUserRoles(existingUser, selectedRoles);
+        setUserRoles(existingUser, selectedRoleIds);
         userDao.updateUser(existingUser);
     }
 }

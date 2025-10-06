@@ -32,8 +32,7 @@ public class AdminRESTController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<User> getUser(@PathVariable long id) {
-        User user = userService.getUserById(id);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
     }
 
     @GetMapping("/users/current")
@@ -45,42 +44,25 @@ public class AdminRESTController {
 
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getAllRoles() {
-        List<Role> roles = roleService.getAllRoles();
-        return new ResponseEntity<>(roles, HttpStatus.OK);
+        return new ResponseEntity<>(roleService.getAllRoles(), HttpStatus.OK);
     }
 
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody User user,
-                                           @RequestParam(value = "roles", required = false) String[] roleNames) {
-        try {
-            return new ResponseEntity<>(userService.saveUser(user, roleNames), HttpStatus.CREATED);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+                                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
+        return new ResponseEntity<>(userService.saveUser(user, roleIds), HttpStatus.CREATED);
     }
 
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User user,
-                                           @RequestParam(value = "roles", required = false) List<String> roleNames) {
-        try {
-            userService.updateUser(user.getId(), user, roleNames != null ? roleNames.toArray(new String[0]) : null);
-            User updatedUser = userService.getUserById(user.getId());
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+                                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
+        userService.updateUser(user.getId(), user, roleIds);
+        return new ResponseEntity<>(userService.getUserById(user.getId()), HttpStatus.OK);
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable long id) {
-        try {
-            userService.deleteUser(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        userService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

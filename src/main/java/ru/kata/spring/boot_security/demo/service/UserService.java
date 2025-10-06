@@ -15,10 +15,10 @@ public interface UserService {
 
     Optional<User> getCurrentUser();
 
-    User saveUser(User user, String[] newRoles);
+    User saveUser(User user, List<Long> roleIds);
 
     void deleteUser(long id);
 
-    void updateUser(long id, User user, String[] selectedRoles);
+    void updateUser(long id, User user, List<Long> roleIds);
 
 }

@@ -27,6 +27,11 @@ public class RoleDaoImpl implements RoleDao {
     }
 
     @Override
+    public Role getRoleById(long id) {
+        return em.find(Role.class, id);
+    }
+
+    @Override
     public void saveRole(Role role) {
         em.persist(role);
     }
