@@ -9,9 +9,7 @@ import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -52,10 +50,8 @@ public class DataInitializer implements CommandLineRunner {
             Set<Role> adminRoles = new HashSet<>();
             adminRoles.add(adminRole);
             adminRoles.add(userRole);
-            String[] roleNames = adminRoles.stream()
-                    .map(Role::getName)
-                    .toArray(String[]::new);
-            userService.saveUser(adminUser, roleNames);
+            adminUser.setRoles(adminRoles);
+            userService.saveUser(adminUser, Collections.singletonList(adminRole.getId()));
         }
         Optional<User> regularUserOpt = userRepository.findByUsername("user@mail.ru");
         if (regularUserOpt.isEmpty()) {
@@ -67,10 +63,8 @@ public class DataInitializer implements CommandLineRunner {
             regularUser.setAge((byte) 60);
             Set<Role> userRoles = new HashSet<>();
             userRoles.add(userRole);
-            String[] roleNames = userRoles.stream()
-                    .map(Role::getName)
-                    .toArray(String[]::new);
-            userService.saveUser(regularUser, roleNames);
+            regularUser.setRoles(userRoles);
+            userService.saveUser(regularUser, Collections.singletonList(userRole.getId()));
         }
     }
 }

@@ -28,6 +28,11 @@ public class RoleServiceImpl implements RoleService {
         return roleDaoImpl.getRoleByName(roleName);
     }
 
+    @Override
+    public Role getRoleById(long roleId) {
+        return roleDaoImpl.getRoleById(roleId);
+    }
+
     @Transactional
     @Override
     public void saveRole(Role role) {

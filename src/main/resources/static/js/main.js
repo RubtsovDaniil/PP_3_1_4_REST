@@ -53,7 +53,7 @@ $(document).ready(function () {
 
 // Функция загрузки всех пользователей
 function loadUsers() {
-    fetch('/api/users')
+    fetch('/api/admin/users')
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -171,7 +171,7 @@ function loadCurrentUser() {
 
 // Функция загрузки ролей для форм
 function loadRoles() {
-    fetch('/api/roles')
+    fetch('/api/admin/roles')
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -188,7 +188,7 @@ function loadRoles() {
                 roles.forEach(role => {
                     newUserRolesHtml += `
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="roles" id="role_${role.id}" value="${role.name}">
+                        <input class="form-check-input" type="checkbox" name="roleIds" id="role_${role.id}" value="${role.id}">
                         <label class="form-check-label" for="role_${role.id}">${role.name.replace('ROLE_', '')}</label>
                     </div>`;
                 });
@@ -213,10 +213,10 @@ function createUser() {
     const username = $('#username').val();
     const password = $('#password').val();
 
-    // Собираем выбранные роли
-    const selectedRoles = [];
-    $('input[name="roles"]:checked').each(function () {
-        selectedRoles.push($(this).val());
+    // Собираем выбранные ID ролей
+    const selectedRoleIds = [];
+    $('input[name="roleIds"]:checked').each(function () {
+        selectedRoleIds.push($(this).val());
     });
 
     // Валидация
@@ -234,15 +234,13 @@ function createUser() {
         password: password
     };
 
-    // Проверяем, что есть хотя бы одна роль
-    if (selectedRoles.length === 0) {
-        selectedRoles.push("ROLE_USER");
-    }
-
-    // Создаем URL с параметрами ролей
-    const url = '/api/users?' + selectedRoles.map(role => `roles=${encodeURIComponent(role)}`).join('&');
-
     console.log("Creating user:", user);
+    console.log("Selected role IDs:", selectedRoleIds);
+
+    // Создаем URL с параметрами ID ролей
+    const queryParams = selectedRoleIds.map(id => `roleIds=${encodeURIComponent(id)}`).join('&');
+    const url = '/api/admin/users' + (queryParams ? '?' + queryParams : '');
+
     console.log("URL:", url);
 
     // Отправляем запрос
@@ -263,6 +261,8 @@ function createUser() {
         .then(data => {
             showAlert('success', 'User successfully created');
             $('#addUserForm')[0].reset(); // Сброс формы
+            // Сбрасываем чекбоксы ролей
+            $('input[name="roleIds"]:checked').prop('checked', false);
             loadUsers();
         })
         .catch(error => {
@@ -274,14 +274,14 @@ function createUser() {
 // Функция открытия модального окна для редактирования
 function openEditModal(userId) {
     // Сначала загружаем роли
-    fetch('/api/roles')
+    fetch('/api/admin/roles')
         .then(response => response.json())
         .then(roles => {
             let rolesHtml = '';
             roles.forEach(role => {
                 rolesHtml += `
                 <div class="form-check">
-                    <input class="form-check-input edit-role" type="checkbox" name="editRoles" id="editRole_${role.id}" value="${role.name}">
+                    <input class="form-check-input edit-role" type="checkbox" name="editRoleIds" id="editRole_${role.id}" value="${role.id}">
                     <label class="form-check-label" for="editRole_${role.id}">${role.name.replace('ROLE_', '')}</label>
                 </div>`;
             });
@@ -289,7 +289,7 @@ function openEditModal(userId) {
             $('#edit-user-roles').html(rolesHtml);
 
             // Теперь загружаем данные пользователя
-            return fetch('/api/users/' + userId);
+            return fetch('/api/admin/users/' + userId);
         })
         .then(response => response.json())
         .then(user => {
@@ -302,17 +302,12 @@ function openEditModal(userId) {
             $('#editEmail').val(user.username);
             $('#editPassword').val('');
 
-            // Отмечаем роли пользователя
+            // Отмечаем ID ролей пользователя
             if (user.roles && user.roles.length > 0) {
                 user.roles.forEach(role => {
-                    const roleName = role.name || role;
-                    $(`#edit-user-roles input[value="${roleName}"]`).prop('checked', true);
+                    const roleId = role.id;
+                    $(`#edit-user-roles input[value="${roleId}"]`).prop('checked', true);
                 });
-            }
-
-            // Если ни одна роль не отмечена, отметим USER по умолчанию
-            if ($('#edit-user-roles input:checked').length === 0) {
-                $('#edit-user-roles input[value="ROLE_USER"]').prop('checked', true);
             }
 
             // Открываем модальное окно
@@ -322,7 +317,6 @@ function openEditModal(userId) {
             console.error('Error opening edit modal:', error);
             showAlert('error', 'Error loading user data: ' + error.message);
         });
-
 }
 
 // Функция обновления пользователя
@@ -334,10 +328,10 @@ function updateUser() {
     const username = $('#editEmail').val();
     const password = $('#editPassword').val();
 
-    // Собираем выбранные роли
-    const selectedRoles = [];
-    $('input[name="editRoles"]:checked').each(function () {
-        selectedRoles.push($(this).val());
+    // Собираем выбранные ID ролей
+    const selectedRoleIds = [];
+    $('input[name="editRoleIds"]:checked').each(function () {
+        selectedRoleIds.push($(this).val());
     });
 
     // Валидация
@@ -360,15 +354,13 @@ function updateUser() {
         user.password = password;
     }
 
-    // Проверяем, что есть хотя бы одна роль
-    if (selectedRoles.length === 0) {
-        selectedRoles.push("ROLE_USER");
-    }
-
-    // Создаем URL с параметрами ролей
-    const url = '/api/users?' + selectedRoles.map(role => `roles=${encodeURIComponent(role)}`).join('&');
-
     console.log("Updating user:", user);
+    console.log("Selected role IDs:", selectedRoleIds);
+
+    // Создаем URL с параметрами ID ролей
+    const queryParams = selectedRoleIds.map(id => `roleIds=${encodeURIComponent(id)}`).join('&');
+    const url = '/api/admin/users' + (queryParams ? '?' + queryParams : '');
+
     console.log("URL:", url);
 
     // Отправляем запрос
@@ -401,7 +393,7 @@ function updateUser() {
 function openDeleteModal(userId) {
     console.log("Opening delete modal for user ID:", userId);
 
-    fetch('/api/users/' + userId)
+    fetch('/api/admin/users/' + userId)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load user: ' + response.status);
@@ -461,7 +453,7 @@ function deleteUser() {
 
     console.log("Deleting user with ID:", userId);
 
-    fetch('/api/users/' + userId, {
+    fetch('/api/admin/users/' + userId, {
         method: 'DELETE'
     })
         .then(response => {

@@ -14,11 +14,11 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -51,55 +51,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> getCurrentUser() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-                return Optional.empty();
-            }
-
-            String username = auth.getName();
-            return userRepository.findByUsername(username);
-
-        } catch (Exception e) {
-            // Логируем ошибку, но возвращаем empty чтобы не прерывать работу приложения
-            System.err.println("Error getting current user: " + e.getMessage());
-            return Optional.empty();
-        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return userRepository.findByUsername(username);
     }
 
     @Override
     @Transactional
-    public User saveUser(User user, String[] newRoles) {
+    public User saveUser(User user, List<Long> newRoleIds) {
         Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
         if (existingUser.isPresent()) {
             throw new UserAlreadyExistsException("User with email " + user.getUsername() + " already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        setUserRoles(user, newRoles);
+        setUserRoles(user, newRoleIds);
         return userDao.saveUser(user);
     }
 
     @Override
     @Transactional
     public void deleteUser(long id) {
-        getUserById(id);
         userDao.deleteUser(id);
     }
 
-    private void setUserRoles(User user, String[] selectedRoles) {
-        if (selectedRoles != null) {
-            Set<Role> roleSet = new HashSet<>();
-            for (String roleName : selectedRoles) {
-                roleSet.add(roleService.getRoleByName(roleName));
-            }
-            user.setRoles(roleSet);
+    private void setUserRoles(User user, List<Long> roleIds) {
+        if (roleIds != null && !roleIds.isEmpty()) {
+            Set<Role> roles = roleIds.stream()
+                    .map(roleService::getRoleById)
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
         }
     }
 
     @Transactional
     @Override
-    public void updateUser(long id, User user, String[] selectedRoles) {
-        user.setId(id);
+    public void updateUser(User user, List<Long> selectedRoleIds) {
         User existingUser = getUserById(user.getId());
         existingUser.setName(user.getName());
         existingUser.setLastName(user.getLastName());
@@ -108,7 +94,7 @@ public class UserServiceImpl implements UserService {
         if (!existingUser.getUsername().equals(user.getUsername())) {
             // Если email изменился, проверяем не занят ли новый email
             Optional<User> userWithNewEmail = userRepository.findByUsername(user.getUsername());
-            if (userWithNewEmail.isPresent() && userWithNewEmail.get().getId() != id) {
+            if (userWithNewEmail.isPresent() && !Objects.equals(userWithNewEmail.get().getId(), user.getId())) {
                 throw new UserAlreadyExistsException("User with email " + user.getUsername() + " already exists");
             }
             existingUser.setUsername(user.getUsername());
@@ -118,7 +104,7 @@ public class UserServiceImpl implements UserService {
         if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        setUserRoles(existingUser, selectedRoles);
+        setUserRoles(existingUser, selectedRoleIds);
         userDao.updateUser(existingUser);
     }
 }
