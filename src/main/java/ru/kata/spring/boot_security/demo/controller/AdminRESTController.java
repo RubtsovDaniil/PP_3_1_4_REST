@@ -10,10 +10,9 @@ import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/admin")
 public class AdminRESTController {
 
     private final UserService userService;
@@ -35,13 +34,6 @@ public class AdminRESTController {
         return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/users/current")
-    public ResponseEntity<User> getCurrentUser() {
-        Optional<User> userOptional = userService.getCurrentUser();
-        return userOptional.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
-    }
-
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getAllRoles() {
         return new ResponseEntity<>(roleService.getAllRoles(), HttpStatus.OK);
@@ -56,7 +48,7 @@ public class AdminRESTController {
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User user,
                                            @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
-        userService.updateUser(user.getId(), user, roleIds);
+        userService.updateUser(user, roleIds);
         return new ResponseEntity<>(userService.getUserById(user.getId()), HttpStatus.OK);
     }
 

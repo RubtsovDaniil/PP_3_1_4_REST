@@ -53,7 +53,7 @@ $(document).ready(function () {
 
 // Функция загрузки всех пользователей
 function loadUsers() {
-    fetch('/api/users')
+    fetch('/api/admin/users')
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -171,7 +171,7 @@ function loadCurrentUser() {
 
 // Функция загрузки ролей для форм
 function loadRoles() {
-    fetch('/api/roles')
+    fetch('/api/admin/roles')
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -239,7 +239,7 @@ function createUser() {
 
     // Создаем URL с параметрами ID ролей
     const queryParams = selectedRoleIds.map(id => `roleIds=${encodeURIComponent(id)}`).join('&');
-    const url = '/api/users' + (queryParams ? '?' + queryParams : '');
+    const url = '/api/admin/users' + (queryParams ? '?' + queryParams : '');
 
     console.log("URL:", url);
 
@@ -274,7 +274,7 @@ function createUser() {
 // Функция открытия модального окна для редактирования
 function openEditModal(userId) {
     // Сначала загружаем роли
-    fetch('/api/roles')
+    fetch('/api/admin/roles')
         .then(response => response.json())
         .then(roles => {
             let rolesHtml = '';
@@ -289,7 +289,7 @@ function openEditModal(userId) {
             $('#edit-user-roles').html(rolesHtml);
 
             // Теперь загружаем данные пользователя
-            return fetch('/api/users/' + userId);
+            return fetch('/api/admin/users/' + userId);
         })
         .then(response => response.json())
         .then(user => {
@@ -359,7 +359,7 @@ function updateUser() {
 
     // Создаем URL с параметрами ID ролей
     const queryParams = selectedRoleIds.map(id => `roleIds=${encodeURIComponent(id)}`).join('&');
-    const url = '/api/users' + (queryParams ? '?' + queryParams : '');
+    const url = '/api/admin/users' + (queryParams ? '?' + queryParams : '');
 
     console.log("URL:", url);
 
@@ -393,7 +393,7 @@ function updateUser() {
 function openDeleteModal(userId) {
     console.log("Opening delete modal for user ID:", userId);
 
-    fetch('/api/users/' + userId)
+    fetch('/api/admin/users/' + userId)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load user: ' + response.status);
@@ -453,7 +453,7 @@ function deleteUser() {
 
     console.log("Deleting user with ID:", userId);
 
-    fetch('/api/users/' + userId, {
+    fetch('/api/admin/users/' + userId, {
         method: 'DELETE'
     })
         .then(response => {
