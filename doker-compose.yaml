@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    container_name: dbcontainer
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: mydbtest
+      MYSQL_ROOT_PASSWORD: 402770
+    restart: always
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p402770"]
+      timeout: 20s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: java-app
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://dbcontainer:3306/mydbtest?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=402770
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
